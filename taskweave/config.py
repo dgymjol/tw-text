@@ -149,6 +149,10 @@ class BaseOptions(object):
                                  "(or non-minimum suppression for distance)"
                                  "to post-processing the predictions. "
                                  "-1: do not use nms. [0, 1]")
+        
+        parser.add_argument("--query_json_file", type=str, default=None)
+        parser.add_argument("--train_t_feat_dir", type=str, default=None, help="another text/query feature dir for training")
+        
         self.parser = parser
 
     def display_save(self, opt):

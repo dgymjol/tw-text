@@ -1,10 +1,10 @@
 import torch
 import os
 import numpy as np
-import ffmpeg
+# import ffmpeg
 import math
-# from run_on_video import clip
-import clip
+from run_on_video import clip
+
 
 class ClipFeatureExtractor:
     def __init__(self, framerate=1/2, size=224, centercrop=True, model_name_or_path="ViT-B/32", device="cuda"):

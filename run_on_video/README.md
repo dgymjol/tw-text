@@ -1,4 +1,4 @@
-Similarly to Moment-DETR, we also provide CLIP-features only pretrained model to support the users to try model on their own datasets.
+Similarly to Moment-DETR, we also provide CLIP-features only pretrained model to support the users to try QD-DETR on their own datasets.
 
 To run, install below packages and
 ```

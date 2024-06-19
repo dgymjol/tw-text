@@ -3,13 +3,13 @@ import torch
 from run_on_video.data_utils import ClipFeatureExtractor
 from run_on_video.model_utils import build_inference_model
 from utils.tensor_utils import pad_sequences_1d
-from taskweave.span_utils import span_cxw_to_xx
+from qd_detr.span_utils import span_cxw_to_xx
 from utils.basic_utils import l2_normalize_np_array
 import torch.nn.functional as F
 import numpy as np
 
 
-class TaskWeavePredictor:
+class QDDETRPredictor:
     def __init__(self, ckpt_path, clip_model_name_or_path="ViT-B/32", device="cuda"):
         self.clip_len = 2  # seconds
         self.device = device
@@ -18,7 +18,7 @@ class TaskWeavePredictor:
             framerate=1/self.clip_len, size=224, centercrop=True,
             model_name_or_path=clip_model_name_or_path, device=device
         )
-        print("Loading trained TaskWeave model...")
+        print("Loading trained QD-DETR model...")
         self.model = build_inference_model(ckpt_path).to(self.device)
 
     @torch.no_grad()
@@ -38,7 +38,7 @@ class TaskWeavePredictor:
         tef_ed = tef_st + 1.0 / n_frames
         tef = torch.stack([tef_st, tef_ed], dim=1).to(self.device)  # (n_frames, 2)
         video_feats = torch.cat([video_feats, tef], dim=1)
-        assert n_frames <= 75, "The positional embedding of this pretrained TaskWeave only support video up " \
+        assert n_frames <= 75, "The positional embedding of this pretrained QDDETR only support video up " \
                                "to 150 secs (i.e., 75 2-sec clips) in length"
         video_feats = video_feats.unsqueeze(0).repeat(n_query, 1, 1)  # (#text, T, d)
         video_mask = torch.ones(n_query, n_frames).to(self.device)
@@ -55,7 +55,7 @@ class TaskWeavePredictor:
 
         # decode outputs
         outputs = self.model(**model_inputs)
-        # #moment_queries refers to the positional embeddings in TaskWeave's decoder, not the input text query
+        # #moment_queries refers to the positional embeddings in QDDETR's decoder, not the input text query
         prob = F.softmax(outputs["pred_logits"], -1)  # (batch_size, #moment_queries=10, #classes=2)
         scores = prob[..., 0]  # * (batch_size, #moment_queries)  foreground label is 0, we directly take it
         pred_spans = outputs["pred_spans"]  # (bsz, #moment_queries, 2)
@@ -94,19 +94,20 @@ def run_example():
     query_path = "run_on_video/example/queries.jsonl"
     queries = load_jsonl(query_path)
     query_text_list = [e["query"] for e in queries]
-    ckpt_path = "run_on_video/taskweave_ckpt/model_best.ckpt"
+    print(query_text_list)
+    ckpt_path = "run_on_video/qd_detr_ckpt/model_best.ckpt"
 
     # run predictions
     print("Build models...")
     clip_model_name_or_path = "ViT-B/32"
     # clip_model_name_or_path = "tmp/ViT-B-32.pt"
-    taskweave_predictor = TaskWeavePredictor(
+    qd_detr_predictor = QDDETRPredictor(
         ckpt_path=ckpt_path,
         clip_model_name_or_path=clip_model_name_or_path,
         device="cuda"
     )
     print("Run prediction...")
-    predictions = taskweave_predictor.localize_moment(
+    predictions = qd_detr_predictor.localize_moment(
         video_path=video_path, query_list=query_text_list)
 
     # print data

@@ -11,7 +11,7 @@ eval_path=data/highlight_val_release.jsonl
 eval_split_name=val
 
 ######## setup video+text features
-feat_root=../moment_detr_features/features
+feat_root=../features
 
 # video features
 v_feat_dim=0
@@ -37,8 +37,9 @@ fi
 #### training
 bsz=32
 
+gpu_num=1
 
-PYTHONPATH=$PYTHONPATH:. python taskweave/train.py \
+CUDA_VISIBLE_DEVICES=${gpu_num} PYTHONPATH=$PYTHONPATH:. python taskweave/train.py \
 --dset_name ${dset_name} \
 --ctx_mode ${ctx_mode} \
 --train_path ${train_path} \
@@ -50,5 +51,22 @@ PYTHONPATH=$PYTHONPATH:. python taskweave/train.py \
 --t_feat_dim ${t_feat_dim} \
 --bsz ${bsz} \
 --results_root ${results_root} \
---exp_id ${exp_id} \
+--exp_id opposite_verb \
+--train_t_feat_dir ../llama_query/2/features
 ${@:1}
+
+# CUDA_VISIBLE_DEVICES=${gpu_num} PYTHONPATH=$PYTHONPATH:. python taskweave/train.py \
+# --dset_name ${dset_name} \
+# --ctx_mode ${ctx_mode} \
+# --train_path ${train_path} \
+# --eval_path ${eval_path} \
+# --eval_split_name ${eval_split_name} \
+# --v_feat_dirs ${v_feat_dirs[@]} \
+# --v_feat_dim ${v_feat_dim} \
+# --t_feat_dir ${t_feat_dir} \
+# --t_feat_dim ${t_feat_dim} \
+# --bsz ${bsz} \
+# --results_root ${results_root} \
+# --exp_id opposite_verb \
+# --query_json_file ../llama_query/2 \
+# ${@:1}
